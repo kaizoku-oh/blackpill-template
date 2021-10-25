@@ -1,5 +1,5 @@
 :name: STM32F103 black pill
-:description: This script prints the string "Hello world!" on USART1
+:description: Toggles a built-in LED and print a string on UART periodically
 
 $name?="black-pill"
 $bin?=@.pio/build/genericSTM32F103C8/firmware.elf
@@ -7,6 +7,7 @@ $bin?=@.pio/build/genericSTM32F103C8/firmware.elf
 # Create Machine & Load config
 mach create $name
 machine LoadPlatformDescription @platforms/cpus/stm32f103.repl
+# machine LoadPlatformDescription @test/add-ccm.repl
 machine LoadPlatformDescriptionFromString "button: Miscellaneous.Button @ gpioPortC 13 { IRQ -> gpioPortC@13 }"
 
 # Create a terminal window showing the output of UART1
