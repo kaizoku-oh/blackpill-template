@@ -22,8 +22,9 @@
 /*-----------------------------------------------------------------------------------------------*/
 /* Private function prototypes                                                                   */
 /*-----------------------------------------------------------------------------------------------*/
-static void system_clock_config(void);
-static void on_button_pressed(void);
+static void _system_clock_config(void);
+static void _on_button_pressed(void);
+static void _test_flash(void);
 
 /*-----------------------------------------------------------------------------------------------*/
 /* Defines                                                                                       */
@@ -48,11 +49,12 @@ int main(void)
   u32LedToggleIndex = 0;
   u32ButtonPressIndex = 0;
   HAL_Init();
-  system_clock_config();
+  _system_clock_config();
   led_init();
   printf_init();
   button_init();
-  button_register_callback(on_button_pressed);
+  button_register_callback(_on_button_pressed);
+  _test_flash();
   while(1)
   {
     printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
@@ -68,7 +70,7 @@ int main(void)
   * @brief      Configure system clock at 216 MHz
   * @return     Nothing
   ********************************************************************************************** */
-static void on_button_pressed(void)
+static void _on_button_pressed(void)
 {
   printf("Button is pressed (%lu)\r\n", u32ButtonPressIndex++);
 }
@@ -77,7 +79,7 @@ static void on_button_pressed(void)
   * @brief      Configure system clock at 72 MHz
   * @return     Nothing
   ********************************************************************************************** */
-static void system_clock_config(void)
+static void _system_clock_config(void)
 {
   RCC_OscInitTypeDef stRccOscInit = {0};
   RCC_ClkInitTypeDef stRccClkInit = {0};
@@ -103,6 +105,14 @@ static void system_clock_config(void)
   stRccClkInit.APB1CLKDivider = RCC_HCLK_DIV2;
   stRccClkInit.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&stRccClkInit, FLASH_LATENCY_2);
+}
+
+/** ***********************************************************************************************
+  * @brief      Test internal flash memory
+  * @return     Nothing
+  ********************************************************************************************** */
+static void _test_flash(void)
+{
 }
 
 /** ***********************************************************************************************
