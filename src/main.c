@@ -18,6 +18,7 @@
 #include "led.h"
 #include "button.h"
 #include "printf.h"
+#include "flash.h"
 
 /*-----------------------------------------------------------------------------------------------*/
 /* Private function prototypes                                                                   */
@@ -57,7 +58,7 @@ int main(void)
   _test_flash();
   while(1)
   {
-    printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
+    // printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
     led_toggle();
     HAL_Delay(LED_BLINK_PERIOD_MS);
   }
@@ -113,6 +114,25 @@ static void _system_clock_config(void)
   ********************************************************************************************** */
 static void _test_flash(void)
 {
+  uint8_t tu08Data[12];
+
+  if(flash_save((uint8_t *)"Hello world!", (sizeof("Hello world!")-1)))
+  {
+    printf("Data saved to flash successfully!\r\n");
+    if(flash_read(0x0800FC00, tu08Data, 12))
+    {
+      printf("Data read from flash successfully!\r\n");
+      printf("Data: %.*s\r\n", 12, tu08Data);
+    }
+    else
+    {
+      printf("Failed to read data from flash\r\n");
+    }
+  }
+  else
+  {
+    printf("Failed to save data to flash\r\n");
+  }
 }
 
 /** ***********************************************************************************************
