@@ -1,87 +1,123 @@
+/* 
+ **************************************************************************************************
+ *
+ * @file    : main.c
+ * @author  : Bayrem GHARSELLAOUI
+ * @date    : October 2021
+ * @brief   : STM32 bluepill application
+ * 
+ **************************************************************************************************
+ */
+
+/*-----------------------------------------------------------------------------------------------*/
+/* Includes                                                                                      */
+/*-----------------------------------------------------------------------------------------------*/
 #include <stdio.h>
+#include <string.h>
 #include "stm32f1xx_hal.h"
 #include "led.h"
 #include "button.h"
 #include "printf.h"
 
-static void SystemClock_Config(void);
-static void On_Button_Presssed(void);
-static void Error_Handler(void);
+/*-----------------------------------------------------------------------------------------------*/
+/* Private function prototypes                                                                   */
+/*-----------------------------------------------------------------------------------------------*/
+static void system_clock_config(void);
+static void on_button_pressed(void);
 
-static uint32_t ledToggleIndex;
-static uint32_t buttonPressIndex;
+/*-----------------------------------------------------------------------------------------------*/
+/* Defines                                                                                       */
+/*-----------------------------------------------------------------------------------------------*/
+#define LED_BLINK_PERIOD_MS                      500
 
+/*-----------------------------------------------------------------------------------------------*/
+/* Private variables                                                                             */
+/*-----------------------------------------------------------------------------------------------*/
+static uint32_t u32LedToggleIndex;
+static uint32_t u32ButtonPressIndex;
+
+/*-----------------------------------------------------------------------------------------------*/
+/* Exported functions                                                                            */
+/*-----------------------------------------------------------------------------------------------*/
+/** ***********************************************************************************************
+  * @brief      Application entry point
+  * @return     Nothing
+  ********************************************************************************************** */
 int main(void)
 {
+  u32LedToggleIndex = 0;
+  u32ButtonPressIndex = 0;
   HAL_Init();
-  SystemClock_Config();
-
-  LED_Init();
-  PRINTF_Init();
-  BUTTON_Init();
-  BUTTON_Register_Callback(On_Button_Presssed);
-  ledToggleIndex = 0;
-  buttonPressIndex = 0;
+  system_clock_config();
+  led_init();
+  printf_init();
+  button_init();
+  button_register_callback(on_button_pressed);
   while(1)
   {
-    printf("Toggling LED (%lu)\r\n", ledToggleIndex++);
-    LED_Toggle();
-    HAL_Delay(1000);
+    printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
+    led_toggle();
+    HAL_Delay(LED_BLINK_PERIOD_MS);
   }
 }
 
-static void On_Button_Presssed(void)
+/*-----------------------------------------------------------------------------------------------*/
+/* Private functions                                                                             */
+/*-----------------------------------------------------------------------------------------------*/
+/** ***********************************************************************************************
+  * @brief      Configure system clock at 216 MHz
+  * @return     Nothing
+  ********************************************************************************************** */
+static void on_button_pressed(void)
 {
-  printf("Button is pressed (%lu)\r\n", buttonPressIndex++);
+  printf("Button is pressed (%lu)\r\n", u32ButtonPressIndex++);
 }
 
-static void SystemClock_Config(void)
+/** ***********************************************************************************************
+  * @brief      Configure system clock at 72 MHz
+  * @return     Nothing
+  ********************************************************************************************** */
+static void system_clock_config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef stRccOscInit = {0};
+  RCC_ClkInitTypeDef stRccClkInit = {0};
 
   /* Initializes the RCC Oscillators according to the specified parameters
    * in the RCC_OscInitTypeDef structure.
    */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  stRccOscInit.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  stRccOscInit.HSEState = RCC_HSE_ON;
+  stRccOscInit.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  stRccOscInit.HSIState = RCC_HSI_ON;
+  stRccOscInit.PLL.PLLState = RCC_PLL_ON;
+  stRccOscInit.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  stRccOscInit.PLL.PLLMUL = RCC_PLL_MUL9;
+  HAL_RCC_OscConfig(&stRccOscInit);
   /** Initializes the CPU, AHB and APB buses clocks */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK   | \
-                                RCC_CLOCKTYPE_SYSCLK | \
-                                RCC_CLOCKTYPE_PCLK1  | \
-                                RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  stRccClkInit.ClockType = RCC_CLOCKTYPE_HCLK   | \
+                           RCC_CLOCKTYPE_SYSCLK | \
+                           RCC_CLOCKTYPE_PCLK1  | \
+                           RCC_CLOCKTYPE_PCLK2;
+  stRccClkInit.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  stRccClkInit.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  stRccClkInit.APB1CLKDivider = RCC_HCLK_DIV2;
+  stRccClkInit.APB2CLKDivider = RCC_HCLK_DIV1;
+  HAL_RCC_ClockConfig(&stRccClkInit, FLASH_LATENCY_2);
 }
 
-static void Error_Handler(void)
-{
-  __disable_irq();
-  while (1)
-  {
-  }
-}
-
+/** ***********************************************************************************************
+  * @brief      Systick timer interrupt handler
+  * @return     Nothing
+  ********************************************************************************************** */
 void SysTick_Handler(void)
 {
   HAL_IncTick();
 }
 
+/** ***********************************************************************************************
+  * @brief      System hardfault interrupt handler
+  * @return     Nothing
+  ********************************************************************************************** */
 void HardFault_Handler(void)
 {
   while(1)

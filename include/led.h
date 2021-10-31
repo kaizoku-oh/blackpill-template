@@ -1,9 +1,23 @@
+/* 
+ **************************************************************************************************
+ *
+ * @file    : led.h
+ * @author  : Bayrem GHARSELLAOUI
+ * @date    : October 2021
+ * @brief   : STM32 bluepill button BSP header file
+ * 
+ **************************************************************************************************
+ */
+
 #ifndef __LED_H__
 #define __LED_H__
 
-void LED_Init(void);
-void LED_On(void);
-void LED_Off(void);
-void LED_Toggle(void);
+/*-----------------------------------------------------------------------------------------------*/
+/* Functions                                                                                     */
+/*-----------------------------------------------------------------------------------------------*/
+void led_init(void);
+void led_on(void);
+void led_off(void);
+void led_toggle(void);
 
 #endif /* __LED_H__ */
