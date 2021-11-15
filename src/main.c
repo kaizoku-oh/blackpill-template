@@ -18,7 +18,6 @@
 #include "led.h"
 #include "button.h"
 #include "printf.h"
-#include "flash.h"
 #include "usbd_cdc_if.h"
 #include "usb_device.h"
 
@@ -57,7 +56,6 @@ int main(void)
   printf_init();
   button_init();
   button_register_callback(_on_button_pressed);
-  // _test_flash();
   usb_device_init();
   CDC_Register_Rx_Cb_FS(_usb_cdc_rx_cb);
   while(1)
