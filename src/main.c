@@ -19,13 +19,15 @@
 #include "button.h"
 #include "printf.h"
 #include "flash.h"
+#include "usbd_cdc_if.h"
+#include "usb_device.h"
 
 /*-----------------------------------------------------------------------------------------------*/
 /* Private function prototypes                                                                   */
 /*-----------------------------------------------------------------------------------------------*/
 static void _system_clock_config(void);
 static void _on_button_pressed(void);
-static void _test_flash(void);
+static void _usb_cdc_rx_cb(uint8_t* pu08Data, uint32_t u32Length);
 
 /*-----------------------------------------------------------------------------------------------*/
 /* Defines                                                                                       */
@@ -55,10 +57,12 @@ int main(void)
   printf_init();
   button_init();
   button_register_callback(_on_button_pressed);
-  _test_flash();
+  // _test_flash();
+  usb_device_init();
+  CDC_Register_Rx_Cb_FS(_usb_cdc_rx_cb);
   while(1)
   {
-    // printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
+    printf("Toggling LED (%lu)\r\n", u32LedToggleIndex++);
     led_toggle();
     HAL_Delay(LED_BLINK_PERIOD_MS);
   }
@@ -77,6 +81,26 @@ static void _on_button_pressed(void)
 }
 
 /** ***********************************************************************************************
+  * @brief      USB CDC receive callback
+  * @param      pu08Data Buffer of received data
+  * @param      u08Length data length
+  * @return     Nothing
+  ********************************************************************************************** */
+static void _usb_cdc_rx_cb(uint8_t* pu08Data, uint32_t u32Length)
+{
+  if('\r' == pu08Data[0])
+  {
+    /* Send a carriage return + new line feed to return to new line */
+    CDC_Transmit_FS((uint8_t *)"\r\n", (sizeof("\r\n")-1));
+  }
+  else
+  {
+    /* Echo back received data */
+    CDC_Transmit_FS(pu08Data, u32Length);
+  }
+}
+
+/** ***********************************************************************************************
   * @brief      Configure system clock at 72 MHz
   * @return     Nothing
   ********************************************************************************************** */
@@ -84,14 +108,16 @@ static void _system_clock_config(void)
 {
   RCC_OscInitTypeDef stRccOscInit = {0};
   RCC_ClkInitTypeDef stRccClkInit = {0};
+  RCC_PeriphCLKInitTypeDef stPeriphClkInit = {0};
 
   /* Initializes the RCC Oscillators according to the specified parameters
    * in the RCC_OscInitTypeDef structure.
    */
-  stRccOscInit.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  stRccOscInit.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
   stRccOscInit.HSEState = RCC_HSE_ON;
   stRccOscInit.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   stRccOscInit.HSIState = RCC_HSI_ON;
+  stRccOscInit.LSIState = RCC_LSI_ON;
   stRccOscInit.PLL.PLLState = RCC_PLL_ON;
   stRccOscInit.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   stRccOscInit.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -106,33 +132,13 @@ static void _system_clock_config(void)
   stRccClkInit.APB1CLKDivider = RCC_HCLK_DIV2;
   stRccClkInit.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&stRccClkInit, FLASH_LATENCY_2);
-}
-
-/** ***********************************************************************************************
-  * @brief      Test internal flash memory
-  * @return     Nothing
-  ********************************************************************************************** */
-static void _test_flash(void)
-{
-  uint8_t tu08Data[12];
-
-  if(flash_save((uint8_t *)"Hello world!", (sizeof("Hello world!")-1)))
-  {
-    printf("Data saved to flash successfully!\r\n");
-    if(flash_read(0x0800FC00, tu08Data, 12))
-    {
-      printf("Data read from flash successfully!\r\n");
-      printf("Data: %.*s\r\n", 12, tu08Data);
-    }
-    else
-    {
-      printf("Failed to read data from flash\r\n");
-    }
-  }
-  else
-  {
-    printf("Failed to save data to flash\r\n");
-  }
+  stPeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC | \
+                                         RCC_PERIPHCLK_ADC | \
+                                         RCC_PERIPHCLK_USB;
+  stPeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  stPeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  stPeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
+  HAL_RCCEx_PeriphCLKConfig(&stPeriphClkInit);
 }
 
 /** ***********************************************************************************************

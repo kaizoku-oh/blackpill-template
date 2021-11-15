@@ -9,11 +9,29 @@
  **************************************************************************************************
  */
 /* Example:
-  uint8_t tu08Data[8];
 
-  flash_save((uint8_t *)"Hello", (sizeof("Hello")-1));
-  flash_read(0x00000000, tu08Data, 5);
-  printf("read data: %.*s", 5, tu08Data);
+  static void _test_flash(void)
+  {
+    uint8_t tu08Data[12];
+
+    if(flash_save((uint8_t *)"Hello world!", (sizeof("Hello world!")-1)))
+    {
+      printf("Data saved to flash successfully!\r\n");
+      if(flash_read(0x0800FC00, tu08Data, 12))
+      {
+        printf("Data read from flash successfully!\r\n");
+        printf("Data: %.*s\r\n", 12, tu08Data);
+      }
+      else
+      {
+        printf("Failed to read data from flash\r\n");
+      }
+    }
+    else
+    {
+      printf("Failed to save data to flash\r\n");
+    }
+  }
 */
 #ifndef __FLASH_H__
 #define __FLASH_H__
